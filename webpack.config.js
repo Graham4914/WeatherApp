@@ -1,7 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const webpack = require('webpack');
+
 
 module.exports = {
     entry: './src/index.js',
@@ -38,15 +38,13 @@ module.exports = {
             filename: 'index.html'
         }),
         new CleanWebpackPlugin(), // Clean the dist folder before each build
-        new webpack.DefinePlugin({
-            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
-        })
+
     ],
 
     devServer: {
         static: './dist', // Where dev server will look for static files, not compiled at runtime
         open: true, // Open the page in browser
-        hot: true
+
     },
 
     optimization: {
