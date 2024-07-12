@@ -3,7 +3,7 @@ import './style.css';
 import { fetchWeather } from './weather';
 import conditions from './conditions.json';
 
-const BASE_ICON_URL = 'https://cdn.weatherapi.com/weather/64x64/day/'; // Set the base URL for the icons
+const BASE_ICON_URL = 'https://cdn.weatherapi.com/weather/64x64/'; // Set the base URL for the icons
 
 let isCelsius = true;
 
@@ -28,29 +28,21 @@ document.getElementById('toggle-unit').addEventListener('click', () => {
         displayWeather(weatherData);
     }
 });
-// function getWeatherIcon(conditionCode, isDaytime) {
-//     const condition = conditions.find(cond => cond.code === conditionCode);
-//     if (!condition) {
-//         return '';
-//     }
 
-//     let iconUrl = '';
-//     if (isDaytime) {
-//         iconUrl = `${BASE_ICON_URL}${condition.day_icon}.png`;
-//     } else {
-//         iconUrl = `${BASE_ICON_URL}${condition.night_icon}.png`;
-//     }
 
-//     console.log('Weather icon URL:', iconUrl); // Log the URL to check if it's correct
-//     return iconUrl;
-// }
-
-function getWeatherIcon(conditionCode) {
+function getWeatherIcon(conditionCode, isDaytime) {
     const condition = conditions.find(cond => cond.code === conditionCode);
-    const iconUrl = condition ? `${BASE_ICON_URL}${condition.icon}.png` : '';
+    if (!condition) {
+        return '';
+    }
+
+    const iconCode = condition.icon;
+    const iconUrl = isDaytime ? `${BASE_ICON_URL}day/${iconCode}.png` : `${BASE_ICON_URL}night/${iconCode}.png`;
+
     console.log('Weather icon URL:', iconUrl); // Log the URL to check if it's correct
     return iconUrl;
 }
+
 
 function createCarouselControls(containerSelector) {
     const container = document.querySelector(containerSelector);
@@ -108,8 +100,6 @@ function slideCarousel(containerSelector, direction) {
 }
 
 
-
-
 function displayWeather(data) {
     localStorage.setItem('weatherData', JSON.stringify(data));
     const weatherInfoDiv = document.getElementById('weather-info');
@@ -126,82 +116,90 @@ function displayWeather(data) {
 
     const currentIcon = getWeatherIcon(current.condition.code, isDaytime);
 
-
-
     const chanceOfRain = forecast[0].day.daily_chance_of_rain;
 
     weatherInfoDiv.innerHTML = `
-    <div class="weather-container">
-        <div class="current-weather">
-            <h2>${location.name}, ${location.country}</h2>
-            <p>${new Date(location.localtime).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-            <div class="weather-main">
-                <img src="${currentIcon}" alt="${current.condition.text}" class="weather-icon">
-                <p class="temperature">${temp} ${tempUnit}</p>
+        <div class="weather-container">
+            <div class="current-weather">
+                <h2>${location.name}, ${location.country}</h2>
+                <p>${new Date(location.localtime).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                <div class="weather-main">
+                    <img src="${currentIcon}" alt="${current.condition.text}" class="weather-icon">
+                    <p class="temperature">${temp} ${tempUnit}</p>
+                </div>
+                <p class="condition">${current.condition.text}</p>
             </div>
-            <p class="condition">${current.condition.text}</p>
+            <div class="weather-details">
+                <div class="detail-item">
+                    <i class="fas fa-thermometer-half icon"></i>
+                    <div>
+                        <p class="heading">Feels Like</p>
+                        <p class="value">${feelsLike} ${tempUnit}</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-wind icon"></i>
+                    <div>
+                        <p class="heading">Wind Speed</p>
+                        <p class="value">${windSpeed}</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-tint icon"></i>
+                    <div>
+                        <p class="heading">Humidity</p>
+                        <p class="value">${current.humidity} %</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-cloud-rain icon"></i>
+                    <div>
+                        <p class="heading">Chance of Rain</p>
+                        <p class="value">${chanceOfRain} %</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="weather-details">
-            <div class="detail-item">
-                <i class="fas fa-thermometer-half icon"></i>
-                <div>
-                    <p class="heading">Feels Like</p>
-                    <p class="value">${feelsLike} ${tempUnit}</p>
-                </div>
-            </div>
-            <div class="detail-item">
-                <i class="fas fa-wind icon"></i>
-                <div>
-                    <p class="heading">Wind Speed</p>
-                    <p class="value">${windSpeed}</p>
-                </div>
-            </div>
-            <div class="detail-item">
-                <i class="fas fa-tint icon"></i>
-                <div>
-                    <p class="heading">Humidity</p>
-                    <p class="value">${current.humidity} %</p>
-                </div>
-            </div>
-            <div class="detail-item">
-                <i class="fas fa-cloud-rain icon"></i>
-                <div>
-                    <p class="heading">Chance of Rain</p>
-                    <p class="value">${chanceOfRain} %</p>
-                </div>
+              <div class="hourly-forecast-container">
+            <div class="carousel-content hourly-forecast">
+                ${data.forecast.forecastday[0].hour.map(hour => {
+        const hourIsDaytime = new Date(hour.time).getHours() >= 6 && new Date(hour.time).getHours() < 18;
+        return `
+                    <div class="hour">
+                        <p>${new Date(hour.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}</p>
+                        <img src="${getWeatherIcon(hour.condition.code, hourIsDaytime)}" alt="${hour.condition.text}">
+                        <p>${isCelsius ? hour.temp_c : hour.temp_f} ${tempUnit}</p>
+                    </div>
+                `}).join('')}
             </div>
         </div>
-    </div>
-    
-    <div class="hourly-forecast-container">
-        <div class="carousel-content hourly-forecast">
-            ${data.forecast.forecastday[0].hour.map(hour => `
-                <div class="hour">
-                    <p>${new Date(hour.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}</p>
-                    <img src="${getWeatherIcon(hour.condition.code)}" alt="${hour.condition.text}">
-                    <p>${isCelsius ? hour.temp_c : hour.temp_f} ${tempUnit}</p>
-                </div>
-            `).join('')}
+                            <div class="forecast-container">
+            <div class="carousel-content forecast">
+                ${forecast.map(day => `
+                    <div class="forecast-day">
+                        <p>${new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })}</p>
+                        <p>${new Date(day.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
+                        <img src="${getWeatherIcon(day.day.condition.code, true)}" alt="${day.day.condition.text}" class="forecast-icon">
+                        <p class="max-temp">${isCelsius ? day.day.maxtemp_c : day.day.maxtemp_f} ${tempUnit}</p>
+                        <p class="min-temp">${isCelsius ? day.day.mintemp_c : day.day.mintemp_f} ${tempUnit}</p>
+                        <p class="condition">${day.day.condition.text}</p>
+                        <p class="chance-of-rain">Chance of Rain: <span class="chance-value">${day.day.daily_chance_of_rain} %</span></p>
+                    </div>
+                `).join('')}
+            </div>
         </div>
-    </div>
-   
-    <div class="forecast-container">
-        <div class="carousel-content forecast">
-            ${forecast.map(day => `
-                <div class="forecast-day">
-                    <p>${new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' })}</p>
-                    <p>${new Date(day.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>
-                    <img src="${getWeatherIcon(day.day.condition.code)}" alt="${day.day.condition.text}" class="forecast-icon">
-                    <p class="max-temp">${isCelsius ? day.day.maxtemp_c : day.day.maxtemp_f} ${tempUnit}</p>
-                    <p class="min-temp">${isCelsius ? day.day.mintemp_c : day.day.mintemp_f} ${tempUnit}</p>
-                    <p class="condition">${day.day.condition.text}</p>
-                    <p class="chance-of-rain">Chance of Rain: <span class="chance-value">${day.day.daily_chance_of_rain} %</span></p>
-                </div>
-            `).join('')}
-        </div>
-    </div>
-`;
+
+    `;
 
     createCarouselControls('.hourly-forecast-container');
     createCarouselControls('.forecast-container');
+
+
+    const currentHour = new Date(current.last_updated).getHours();
+    const hourElements = document.querySelectorAll('.hourly-forecast .hour');
+    const hourWidth = hourElements[0].offsetWidth;
+    const carouselContent = document.querySelector('.hourly-forecast-container .carousel-content');
+    const scrollToPosition = hourWidth * currentHour - (carouselContent.offsetWidth / 2) + (hourWidth / 2);
+
+    carouselContent.scrollLeft = scrollToPosition;
 }
