@@ -15,7 +15,7 @@ document.getElementById('search-button').addEventListener('click', async () => {
             const weatherData = await fetchWeather(city);
             displayWeather(weatherData);
         } catch (error) {
-            document.getElementById('weather-info').innerHTML = '<p>Error fetching data. Please try again.</p>';
+            document.getElementById('weather-info').innerHTML = '<p>Please use a correct city name</p>';
         }
     }
 });

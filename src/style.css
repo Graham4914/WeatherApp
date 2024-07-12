@@ -12,6 +12,11 @@ body {
   justify-content: center;
   /* overflow: hidden; */
 }
+
+/* error message */
+.weather-info p {
+  text-align: center;
+}
 h3 {
   text-align: center;
   color: rgba(0, 0, 0, 0.6);
