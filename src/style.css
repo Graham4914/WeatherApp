@@ -334,3 +334,10 @@ p.chance-of-rain.value {
     right: 10px;
   }
 }
+
+/* Media Query to hide carousel controls on touch devices */
+@media (pointer: coarse) {
+  .carousel-control {
+    display: none;
+  }
+}
